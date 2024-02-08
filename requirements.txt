@@ -1,0 +1,11 @@
+aiokafka
+aiohttp
+pandas
+numpy
+requests
+xmltodict
+confluent_kafka
+pydantic
+pylint
+mypy
+types-requests

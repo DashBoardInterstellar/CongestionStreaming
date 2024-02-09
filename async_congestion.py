@@ -13,7 +13,7 @@ if __name__ == "__main__":
         GenderCongestionRate,
     )
 
-    async def main():
+    async def main() -> None:
         """main"""
         try:
             create_topic()

@@ -67,20 +67,6 @@ class AsyncSeoulCongestionDataSending(AbstractSeoulDataSending):
                         message=rate_schema,
                         nof=False,
                     )
-
-                case "N":
-                    await produce_sending(
-                        topic=f"{transformed_category}_noF_{rate_type}",
-                        message=rate_schema,
-                        key=location,
-                    )
-                    await self.logging.data_log(
-                        location=f"{transformed_category}_noF_{rate_type}",
-                        rate_type=rate_type,
-                        message=rate_schema,
-                        nof=True,
-                    )
-
         except KafkaConnectionError as error:
             self.logging.error_log(
                 error_type="kafka_connection",

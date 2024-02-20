@@ -5,6 +5,8 @@ TEST
 if __name__ == "__main__":
     import asyncio
     from core.data_mq.topic_create import create_topic
+
+    from core.data_mq.data_admin import delete_all_topics
     from core.congestion_response.seoul_congestion_api import (
         AsyncSeoulCongestionDataSending as ADS,
     )
@@ -16,6 +18,7 @@ if __name__ == "__main__":
     async def main() -> None:
         """main"""
         try:
+            # delete_all_topics()
             create_topic()
             # from core.data_mq.s3_sink_connect import sink_connection
 

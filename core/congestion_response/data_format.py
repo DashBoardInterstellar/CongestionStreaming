@@ -28,6 +28,12 @@ class BasePopulationRate(BaseModel):
     area_ppltn_max: int
 
     @staticmethod
+    def _predict_yn(data: dict[str, dict[str, list[dict[str, float]]]]) -> dict:
+        """Provide population prediction data if available."""
+        if isinstance(data.get("FCST_YN"), dict):
+            return transform_data(data["FCST_PPLTN"])
+
+    @staticmethod
     def _rate_ppltn_extract(data: dict[str, str], keyword: str) -> dict[str, float]:
         """키워드에 따라서 데이터 추출
 
@@ -38,9 +44,9 @@ class BasePopulationRate(BaseModel):
         Returns:
             dict[str, float]:
             >>> {
-                "ppltn_rate_0": 0.3,
-                "ppltn_rate_10": 5.7,
-                "ppltn_rate_20": 26.9,
+            "ppltn_rate_0": 0.3,
+            "ppltn_rate_10": 5.7,
+            "ppltn_rate_20": 26.9,
             ...
             }
         """
@@ -49,14 +55,14 @@ class BasePopulationRate(BaseModel):
         }
 
     @classmethod
-    def schmea_extract(
-        cls, category: str, data: dict[str, str], rate_key: str, keyword: str
+    def schema_extract(
+        cls, category: str, data: dict[str, str], target: str, keyword: str
     ) -> BasePopulationRate:
         """공통스키마
 
         Args:
             data (dict[str, str]): 서울시 도시 실시간 인구 혼잡도 API
-            rate_key (str): 추출한 키
+            target (str): 추출한 키
             keyword (str): 추출할 키워드
 
         Returns:
@@ -71,7 +77,7 @@ class BasePopulationRate(BaseModel):
                 area_congestion_msg=data["AREA_CONGEST_MSG"],
                 area_ppltn_min=int(data["AREA_PPLTN_MIN"]),
                 area_ppltn_max=int(data["AREA_PPLTN_MAX"]),
-                **{rate_key: cls._rate_ppltn_extract(data=data, keyword=keyword)},
+                **{target.lower(): cls._rate_ppltn_extract(data, keyword)},
             ).model_dump()
         except ValidationError as error:
             logging.error("schem extract error --> %s", error)
@@ -112,6 +118,12 @@ class TotalAgeRateComposition(BasePopulationRate):
                 "area_congestion_msg": "사람이 몰려있을 수 있지만 크게 붐비지는 않아요. 도보 이동에 큰 제약이 없어요.",
                 "area_ppltn_min": 30000,
                 "area_ppltn_max": 32000,
+                "fcst_yn":{
+                    "fcst_ppltn: [
+                        ~~
+                    ]
+                },
+                or "fcst_yn": "N"
                 "age_rate": {
                     "ppltn_rate_0": 0.3,
                     "ppltn_rate_10": 5.7,
@@ -120,7 +132,7 @@ class TotalAgeRateComposition(BasePopulationRate):
                 }
             }
         """
-        return super().schmea_extract(category, data, "age_rate", "PPLTN_RATE_")
+        return super().schema_extract(category, data, "age_rate", "PPLTN_RATE_")
 
 
 # ------------------------------------------------------------------------------------------------------------#
@@ -152,6 +164,12 @@ class AreaGenderRateSpecific(BasePopulationRate):
                 "area_congestion_msg": "사람이 몰려있을 수 있지만 크게 붐비지는 않아요. 도보 이동에 큰 제약이 없어요.",
                 "area_ppltn_min": 30000,
                 "area_ppltn_max": 32000,
+                "fcst_yn":{
+                    "fcst_ppltn: [
+                        ~~
+                    ]
+                },
+                or "fcst_yn": "N"
                 "gender_rate": {
                     "male_ppltn_rate": 44.2,
                     "female_ppltn_rate": 55.8
@@ -159,7 +177,10 @@ class AreaGenderRateSpecific(BasePopulationRate):
 
             }
         """
-        return super().schmea_extract(category, data, "gender_rate", "E_PPLTN_RATE")
+        return super().schema_extract(category, data, "gender_rate", "E_PPLTN_RATE")
+
+
+# ------------------------------------------------------------------------------------------------------------#
 
 
 class ForecastPopulation(BaseModel):
@@ -182,19 +203,10 @@ class AreaPredictSpecific(BasePopulationRate):
     fcst_yn: PredictFcst
 
     @staticmethod
-    def _predict_yn(data: dict[str, str]) -> dict | str:
-        """인구 예측값 제공 여부
-
-        Args:
-            data (dict[str, str]): 서울시 도시 실시간 인구 혼잡도 API
-
-        Returns:
-            str: N
-            dict: 혼잡도 예측 데이터
-        """
-        match data["FCST_YN"]:
-            case "Y":
-                return transform_data(data["FCST_PPLTN"])
+    def _predict_yn(data: dict[str, dict[str, list[dict[str, float]]]]) -> dict:
+        """Provide population prediction data if available."""
+        if isinstance(data.get("FCST_YN"), dict):
+            return transform_data(data["FCST_PPLTN"])
 
     @classmethod
     def schema_modify(cls, category: str, data: dict[str, str]) -> BasePopulationRate:
@@ -204,22 +216,22 @@ class AreaPredictSpecific(BasePopulationRate):
             - rate_key (str): 추출한 키
             - keyword (str): 추출할 키워드\n
         Returns:
-        >>> {
-                "area_name": "가로수길",
-                "area_congestion_lvl": "보통",
-                "area_congestion_msg": "사람이 몰려있을 수 있지만 크게 붐비지는 않아요. 도보 이동에 큰 제약이 없어요.",
-                "area_ppltn_min": 30000,
-                "area_ppltn_max": 32000,
-                "fcst_yn": {
-                    "fcst_ppltn": [
-                        {
-                            "fcst_time": 1693998000.0,
-                            "fcst_congest_lvl": 2,
-                            "fcst_ppltn_min": 28000.0,
-                            "fcst_ppltn_max": 30000.0,
-                        },
-                    ]
+            >>> {
+                    "area_name": "가로수길",
+                    "area_congestion_lvl": "보통",
+                    "area_congestion_msg": "사람이 몰려있을 수 있지만 크게 붐비지는 않아요. 도보 이동에 큰 제약이 없어요.",
+                    "area_ppltn_min": 30000,
+                    "area_ppltn_max": 32000,
+                    "fcst_yn": {
+                        "fcst_ppltn": [
+                            {
+                                "fcst_time": 1693998000.0,
+                                "fcst_congest_lvl": 2,
+                                "fcst_ppltn_min": 28000.0,
+                                "fcst_ppltn_max": 30000.0,
+                            },
+                        ]
+                    }
                 }
-            }
         """
-        return super().schmea_extract(category, data, "fcst_yn", cls._predict_yn(data))
+        return super().schema_extract(category, data, "gender_rate", "E_PPLTN_RATE")

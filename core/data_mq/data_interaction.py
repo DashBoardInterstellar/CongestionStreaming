@@ -1,7 +1,9 @@
 """
 KAFAK PRODUCE 
 """
+
 import json
+import hashlib
 from typing import Any
 from pathlib import Path
 from collections import defaultdict
@@ -36,6 +38,7 @@ async def produce_sending(topic: Any, message: Any, key: Any = None):
     카프카 세팅값
 
     """
+
     config = {
         "bootstrap_servers": f"{BOOTSTRAP_SERVER}",
         "security_protocol": f"{SECURITY_PROTOCOL}",
@@ -46,6 +49,7 @@ async def produce_sending(topic: Any, message: Any, key: Any = None):
         "value_serializer": lambda value: json.dumps(value).encode("utf-8"),
         "retry_backoff_ms": 100,
     }
+
     producer = AIOKafkaProducer(**config)
 
     await producer.start()
@@ -70,7 +74,9 @@ async def produce_sending(topic: Any, message: Any, key: Any = None):
         KafkaConnectionError,
     ) as error:
         logging.error(
-            "Kafka broker error로 인해 임시 저장합니다 : %s, message: %s", error, message
+            "Kafka broker error로 인해 임시 저장합니다 : %s, message: %s",
+            error,
+            message,
         )
         except_list[topic].append(json.dumps(message).encode("utf-8"))
     finally:

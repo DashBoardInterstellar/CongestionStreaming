@@ -26,6 +26,8 @@ class BasePopulationRate(BaseModel):
     area_congestion_msg: str
     area_ppltn_min: int
     area_ppltn_max: int
+    male_ppltn_rate: float
+    female_ppltn_rate: float
 
     @staticmethod
     def _predict_yn(data: dict[str, dict[str, list[dict[str, float]]]]) -> dict:
@@ -77,6 +79,8 @@ class BasePopulationRate(BaseModel):
                 area_congestion_msg=data["AREA_CONGEST_MSG"],
                 area_ppltn_min=int(data["AREA_PPLTN_MIN"]),
                 area_ppltn_max=int(data["AREA_PPLTN_MAX"]),
+                male_ppltn_rate=float(data["MALE_PPLTN_RATE"]),
+                female_ppltn_rate=float(data["FEMALE_PPLTN_RATE"]),
                 **{target.lower(): cls._rate_ppltn_extract(data, keyword)},
             ).model_dump()
         except ValidationError as error:
@@ -118,12 +122,6 @@ class TotalAgeRateComposition(BasePopulationRate):
                 "area_congestion_msg": "사람이 몰려있을 수 있지만 크게 붐비지는 않아요. 도보 이동에 큰 제약이 없어요.",
                 "area_ppltn_min": 30000,
                 "area_ppltn_max": 32000,
-                "fcst_yn":{
-                    "fcst_ppltn: [
-                        ~~
-                    ]
-                },
-                or "fcst_yn": "N"
                 "age_rate": {
                     "ppltn_rate_0": 0.3,
                     "ppltn_rate_10": 5.7,
@@ -133,51 +131,6 @@ class TotalAgeRateComposition(BasePopulationRate):
             }
         """
         return super().schema_extract(category, data, "age_rate", "PPLTN_RATE_")
-
-
-# ------------------------------------------------------------------------------------------------------------#
-
-
-class AreaGenderRate(BaseModel):
-    """여성 남성 혼잡도"""
-
-    male_ppltn_rate: float
-    female_ppltn_rate: float
-
-
-class AreaGenderRateSpecific(BasePopulationRate):
-    """여성 남성 혼잡도 스키마 만들기"""
-
-    gender_rate: AreaGenderRate
-
-    @classmethod
-    def schema_modify(cls, category: str, data: dict[str, str]) -> BasePopulationRate:
-        """
-        Args:
-            - data (dict[str, str]): 서울시 도시 실시간 인구 혼잡도 API
-            - rate_key (str): 추출한 키
-            - keyword (str): 추출할 키워드\n
-        Returns:
-        >>> {
-                "area_name": "가로수길",
-                "area_congestion_lvl": "보통",
-                "area_congestion_msg": "사람이 몰려있을 수 있지만 크게 붐비지는 않아요. 도보 이동에 큰 제약이 없어요.",
-                "area_ppltn_min": 30000,
-                "area_ppltn_max": 32000,
-                "fcst_yn":{
-                    "fcst_ppltn: [
-                        ~~
-                    ]
-                },
-                or "fcst_yn": "N"
-                "gender_rate": {
-                    "male_ppltn_rate": 44.2,
-                    "female_ppltn_rate": 55.8
-                },
-
-            }
-        """
-        return super().schema_extract(category, data, "gender_rate", "E_PPLTN_RATE")
 
 
 # ------------------------------------------------------------------------------------------------------------#

@@ -16,10 +16,7 @@ from core.congestion_response.utils import (
     AsyncResponseDataFactory as ARDF,
     SeoulPlaceClassifier as Seoul,
 )
-from core.congestion_response.data_format import (
-    TotalAgeRateComposition as TRC,
-    AreaGenderRateSpecific as AGRS,
-)
+from core.congestion_response.data_format import TotalAgeRateComposition as TRC
 
 
 tracemalloc.start()
@@ -105,10 +102,3 @@ class AgeCongestionRate(AbstractDataTransfore):
 
     def transform(self, category: str, data: dict[str, Any]) -> dict[str, Any]:
         return TRC.schema_modify(category, data)
-
-
-class GenderCongestionRate(AbstractDataTransfore):
-    """성별 혼잡도 클래스"""
-
-    def transform(self, category: str, data: dict[str, Any]) -> dict[str, Any]:
-        return AGRS.schema_modify(category, data)

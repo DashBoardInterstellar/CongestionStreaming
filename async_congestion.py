@@ -10,10 +10,7 @@ if __name__ == "__main__":
     from core.congestion_response.seoul_congestion_api import (
         AsyncSeoulCongestionDataSending as ADS,
     )
-    from core.congestion_response.seoul_congestion_api import (
-        AgeCongestionRate,
-        GenderCongestionRate,
-    )
+    from core.congestion_response.seoul_congestion_api import AgeCongestionRate
 
     async def main() -> None:
         """main"""
@@ -25,9 +22,6 @@ if __name__ == "__main__":
             task = [
                 asyncio.create_task(
                     ADS(AgeCongestionRate()).async_popular_congestion("AGE")
-                ),
-                asyncio.create_task(
-                    ADS(GenderCongestionRate()).async_popular_congestion("GENDER")
                 ),
             ]
 
